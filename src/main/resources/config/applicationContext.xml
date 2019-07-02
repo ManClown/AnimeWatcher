@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <!-- ====================加载属性文件============== -->
+    <!--0、 加载数据库的属性配置文件 -->
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:config/database.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 1、配置hibernate数据源spring bean -->
+    <bean id="hibernateDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close">
+        <!-- 配置c3p0数据源的相关属性 -->
+        <property name="driverClass" value="${driver}" /> <property name="jdbcUrl"
+            value="${url}" /> <property name="user" value="${username}" /> <property
+            name="password" value="${password}" />
+        <!--
+        <property name="driverClass" value="com.mysql.jdbc.Driver" />
+        <property name="jdbcUrl"
+                  value="jdbc:mysql://localhost:3306/dbhibernate?useUnicode=true&amp;characterEncoding=UTF-8" />
+        <property name="user" value="root" />
+        <property name="password" value="root" />-->
+
+        <!-- c3p0 数据库连接池属性配置 -->
+        <!-- 数据库连接池所维持的最大数据库连接数目 -->
+        <property name="maxPoolSize" value="50"></property>
+        <!-- 数据库连接池初始化的最小数据库连接数目 -->
+        <property name="initialPoolSize" value="2"></property>
+        <!-- 数据库连接池所维持的连接的有效时长：秒 -->
+        <property name="maxIdleTime" value="5000"></property>
+    </bean>
+
+    <!-- 2、配置hibernate的sessionfactory bean -->
+    <bean id="sessinFactory"
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <!-- 2.1 配置sessionfactory的数据源 -->
+        <property name="dataSource" ref="hibernateDataSource"></property>
+        <!-- 2.2 hibernate框架特性的配置 -->
+        <property name="hibernateProperties">
+            <!-- 应为该属性类型为properties，所以使用props节点进行配置 -->
+            <props>
+                <!-- 配置hibernate的数据库方言：指明所加载的数据库类型 -->
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <!-- 是否在控制台数输出每次进行数据库操作的hibernate映射之后的sql语句 -->
+                <prop key="hibernate.show_sql">true</prop>
+                <!-- hibernate进行外连接处理时，所取的外链及的最大层数 -->
+                <prop key="hibernate.max_fetch_depth">3</prop>
+                <!-- hibernate对数据表进行生成的处理策略： create-drop：hibernate每次加载表结构时，开始加载时创建表结构；结束时删除表结构；先建立表，再删除表
+                    create：hibernate每次加载表结构时，加载时都重新创建表结构；删除原有数据，重新建立表 update：hibernate每次加载表结构时，检查表结构没有更新，如果有更新处理；不会删除原有数据
+                    validate：hibernate每次加载表结构时，加载时验证表结构； -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+            </props>
+        </property>
+        <!-- 2.3 配置映射文件 -->
+        <property name="mappingResources">
+            <!-- 加载映射文件（文件路径） -->
+            <list>
+                <!-- hibernate映射文件配置:使用的路径是文件夹路径 -->
+                <value>config/UserEntity.hbm.xml</value>
+                <value>config/VideoHistory.hbm.xml</value>
+                <value>config/Video.hbm.xml</value>
+                <value>config/CommentEntity.hbm.xml</value>
+            </list>
+        </property>
+    </bean>
+    <!-- 3、配置hibernate的事务管理对象 -->
+    <bean id="transactionManager"
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <!-- 依赖注入sessionfactory bean实例对象 -->
+        <property name="sessionFactory" ref="sessinFactory"></property>
+    </bean>
+
+    <!-- 4、配置spring的事务管理aop -->
+    <!-- aop通知属性的配置 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <!-- 事务的传播属性:即事务aop触发点,可以使用*号通配符 -->
+        <tx:attributes>
+            <tx:method name="add*" propagation="REQUIRED" />
+            <tx:method name="delete*" propagation="REQUIRED" />
+            <tx:method name="logic*" propagation="REQUIRED" />
+            <tx:method name="update*" propagation="REQUIRED" />
+            <tx:method name="execute*" propagation="REQUIRED"/>
+            <tx:method name="is*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="query*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="do*" propagation="REQUIRED" read-only="true" />
+            <tx:method name="*" propagation="REQUIRED" read-only="true" />
+        </tx:attributes>
+    </tx:advice>
+
+    <!-- 5、aop切面的配置 -->
+    <aop:config>
+        <aop:pointcut id="aopPointcut"
+                      expression="execution(* services..*.*(..))" />
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="aopPointcut" />
+    </aop:config>
+
+
+
+    <!-- spring管理service 层实例对象 -->
+    <bean id="UserServiceImpl" class="services.impl.UserServiceImpl"
+          scope="prototype">
+        <!-- 注入service层实例对象 -->
+        <property name="userD" ref="UserDaoImpl"></property>
+    </bean>
+    <bean id="MediaServiceImpl" class="services.impl.MediaServiceImpl"
+          scope="prototype">
+        <property name="mediaDao" ref="MediaDaoImpl"></property>
+    </bean>
+    <!-- spring管理 dao层实例对象 -->
+    <bean id="UserDaoImpl" class="dao.impl.UserDaoImpl"
+          scope="prototype">
+        <!-- 注入Hibernate的sessionFactory实例对象 -->
+        <property name="sessionFactory" ref="sessinFactory"></property>
+    </bean>
+    <bean id="MediaDaoImpl" class="dao.impl.MediaDaoImpl"
+          scope="prototype">
+        <property name="sessionFactory" ref="sessinFactory"></property>
+        <property name="useD" ref="UserDaoImpl"></property>
+    </bean>
+    <!-- ******************6、业务模块的配置********************** -->
+    <!-- ========== 登录管理 开始=============== -->
+    <!-- spring 管理LoginActionBean类的实例对象 -->
+    <bean id="LoginActionBean" class="action.LoginActionBean"
+          scope="prototype">
+        <!-- 注入service层实例对象userS -->
+        <property name="userS" ref="UserServiceImpl"></property>
+    </bean>
+    <!-- ========== 登录管理 结束=============== -->
+
+    <!-- 注册管理 开始-->
+    <!--spring 管理AddActionBean类的实例对象-->
+    <bean id="AddActionBean" class="action.AddUserBean" scope="prototype">
+        <!--注入service层实例对象userS-->
+        <property name="userS" ref="UserServiceImpl"></property>
+    </bean>
+    <!--注册管理结束 -->
+
+    <!-- 上传视频文件管理 开始-->
+    <bean id="UploadBean" class="action.UploadVideoBean" scope="prototype">
+        <property name="mediaS" ref="MediaServiceImpl"></property>
+        <property name="userS" ref="UserServiceImpl"></property>
+    </bean>
+    <!--上传视频文件管理 结束-->
+
+    <bean id="VideoActionBean" class="action.VideoAction" scope="prototype">
+        <property name="mediaS" ref="MediaServiceImpl"></property>
+        <property name="userS" ref="UserServiceImpl"></property>
+    </bean>
+
+    <bean id="VideoHistoryBean" class="action.HistoryAction" scope="prototype">
+        <property name="mediaS" ref="MediaServiceImpl"></property>
+    </bean>
+
+    <bean id="CommentBean" class="action.CommentBean" scope="prototype">
+        <property name="userS" ref="UserServiceImpl"></property>
+        <property name="mediaS" ref="MediaServiceImpl"></property>
+    </bean>
+
+    <bean id="VideoManagerBean" class="action.VideoManager" scope="prototype">
+        <property name="mediaS" ref="MediaServiceImpl"></property>
+    </bean>
+</beans>

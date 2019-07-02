@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+  <display-name>struts1022</display-name>
+  <!-- ===========web服务器加载spring框架配置=============== -->
+  <!-- 配置框架启动需加载的相关参数 -->
+  <context-param>
+    <!-- 该参数名是固定的，用在spring监听器中 -->
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:config/applicationContext.xml</param-value>
+  </context-param>
+  <!-- 配置spring的监听器：使spring一直监听web容器，对其进行管理 等价于加载：ApplicationContext context
+      = new ClassPathXmlApplicationContext("applicationContext.xml") -->
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  <!-- 防止Spring内存溢出监听器(可选) -->
+  <listener>
+    <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+  </listener>
+
+
+  <!-- 配置struts框架的过滤器，这样在web启动之后，struts框架会拦截所有的发现该站点的http请求 -->
+  <filter>
+    <filter-name>struts2</filter-name>
+    <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+  </filter>
+  <!-- 配置struts过滤器的映射范围 -->
+  <filter-mapping>
+    <filter-name>struts2</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- =========框架默认启动主页============ -->
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+</web-app>

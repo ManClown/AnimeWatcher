@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- package:映射实体类所在的包名称 -->
+<hibernate-mapping package="orm">
+    <!-- name：所映射实体类名；table:实体类映射的数据库的表名;catalog：数据库名； lazy：是否使用懒加载（延迟加载） -->
+    <class name="CommentEntity" table="T_Comments" lazy="true">
+        <!-- 数据库主键字段的生成方式。 name：实体类的属性名；column：表的字段名（如果不指定，则字段名和name属性名保持一致） -->
+        <!-- 主键自动生成的策略：参见 手册-->
+        <id name="commentID" column="T_COMMENTID">
+            <generator class="identity" />
+        </id>
+        <!-- 除主键之外的其他属性的映射关系 -->
+
+        <!-- 用户名映射 -->
+        <property name="userName" column="T_USERNAME" type="string"
+                  not-null="true" />
+        <!-- 用户密码映射 -->
+        <property name="comment" column="T_COMMENT" type="string"
+                  not-null="true" />
+        <many-to-one name="video"  column="T_VIDEONUMBER" cascade="delete,save-update"
+                     class="orm.Video"/>
+    </class>
+
+</hibernate-mapping>

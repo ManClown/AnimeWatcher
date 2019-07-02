@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="orm">
+
+    <class name="VideoHistoryEntity" table="T_VIDEOHISTORYENTITY">
+        <id name="id" column="T_ID">
+            <generator class="identity"/>
+        </id>
+        <!--视频号映射-->
+        <property name="videoNumber" column="T_VIDEONUMBER" type="string"></property>
+
+        <property name="watchTime" column="T_WATCHTIME" type="string"></property>
+
+        <many-to-one name="user" cascade="save-update,delete" column="T_USERNAME" lazy="false"
+                     class="orm.UsersEntity"/>
+
+    </class>
+
+</hibernate-mapping>

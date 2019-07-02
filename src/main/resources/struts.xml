@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+
+    <!-- 配置struts框架的编码格式，兼容中文 -->
+    <constant name="struts.i18n.encoding" value="utf-8"/>
+    <!-- 是否打开struts框架的开发者模式：将错误信息输出到前台界面 -->
+    <constant name="struts.devMode" value="true" />
+    <constant name="struts.multipart.maxSize" value="200000000"/>
+    <!-- struts aciont配置的包： name:package的名字；namespace：包的映射路径，url访问的路径，默认为 “/”;
+        extends:struts的包具有继承关系，继承了配置内容。 -->
+    <package name="default" namespace="/" extends="struts-default">
+
+        <!-- 全局的返回结果串：如果C返回了 error结果串，则进入如下配置页面的视图层进行显示 -->
+        <global-results>
+            <result name="error">/WEB-INF/jsp/error.jsp</result>
+        </global-results>
+
+        <global-exception-mappings>
+            <exception-mapping exception="java.lang.Exception"
+                               result="error" />
+        </global-exception-mappings>
+
+        <!-- struts配置C层的action对象的属性；name：action的名字，是form表单提交时映射的值；
+        class:该action的实现类；method：指明该请求由那个方法响应，如果没有配置该属性则使用默认的execute方法进行响应 -->
+        <action name="LoginAction" class="LoginActionBean" method="doLogin">
+            <!-- 指定action响应方法返回的结果串的显示视图 -->
+            <result name="success" type="chain">AllVideoAction</result>
+            <result name="failure">WEB-INF/jsp/login.jsp</result>
+        </action>
+        <action name="LogoutAction" class="LoginActionBean" method="doLogout">
+            <result name="success" type="chain">AllVideoAction</result>
+            <result name="failure">WEB-INF/jsp/login.jsp</result>
+        </action>
+        <!--配置注册用户请求响应页面-->
+        <action name="AddUserAction" class="AddActionBean" method="addUser">
+            <result name="success" type="chain">AllVideoAction</result>
+            <result name="error">WEB-INF/jsp/login.jsp</result>
+        </action>
+        <action name="UploadVideo" class="UploadBean" method="upLoad">
+            <interceptor-ref name="fileUpload">
+                <param name="allowedExtensions">.jpg,.png,.gif,.avi,.rmvb,.rm,.asf,.divx,.mpg,.mpeg,.mpe,.wmv,.mp4,.mkv,.vob</param>
+                <param name="maximumSize">2147483648</param>
+            </interceptor-ref>
+            <interceptor-ref name="defaultStack"/>
+            <result name="success" type="chain">AllVideoAction</result>
+
+        </action>
+        <!--配置动漫视频浏览请求响应-->
+        <action name="*VideoAction" class="VideoActionBean" method="query{1}Video">
+            <result name="success">WEB-INF/jsp/{1}.jsp</result>
+            <result name="error">WEB-INF/jsp/error.jsp</result>
+        </action>
+        <action name="*" class="AddActionBean" method="register">
+            <result name="success">WEB-INF/jsp/{1}.jsp</result>
+        </action>
+
+
+        <!--配置动漫视频播放-->
+        <action name="PlayerAction" class="VideoActionBean" method="doPlayer">
+            <result name="success">WEB-INF/jsp/player.jsp</result>
+            <result name="error">WEB-INF/jsp/error.jsp</result>
+        </action>
+
+        <action name="HistoryAction" class="VideoHistoryBean" method="listHistory">
+            <result name="success">WEB-INF/jsp/history.jsp</result>
+            <result name="error">WEB-INF/jsp/error.jsp</result>
+        </action>
+
+        <action name="CommentAction" class="CommentBean" method="comment">
+            <result name="success" type="chain">PlayerAction</result>
+            <result name="error">WEB-INF/jsp/error.jsp</result>
+        </action>
+
+        <action name="VideoManager_Query" class="VideoManagerBean" method="queryVideoByup">
+            <result name="success">WEB-INF/jsp/VideoManager.jsp</result>
+            <result name="error">WEB-INF/jsp/error.jsp</result>
+        </action>
+
+        <action name="VideoManager_Delete" class="VideoManagerBean" method="deleteVideo">
+            <result name="success" type="chain">VideoManager_Query</result>
+            <result name="error">WEB-INF/jsp/error.jsp</result>
+        </action>
+    </package>
+
+    <!-- 将其他的struts配置内容yinru -->
+    <!-- <include file="example.xml" /> -->
+
+</struts>
